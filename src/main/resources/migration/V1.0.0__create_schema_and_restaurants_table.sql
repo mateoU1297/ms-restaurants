@@ -1,0 +1,14 @@
+CREATE SCHEMA IF NOT EXISTS restaurant_management;
+
+CREATE TABLE restaurants (
+   id BIGSERIAL PRIMARY KEY,
+   name VARCHAR(100) NOT NULL,
+   nit VARCHAR(20) NOT NULL UNIQUE,
+   address VARCHAR(200) NOT NULL,
+   phone VARCHAR(13) NOT NULL,
+   url_logo VARCHAR(500) NOT NULL,
+   owner_id BIGINT NOT NULL,
+   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP,
+   CONSTRAINT uk_restaurants_nit UNIQUE (nit)
+);

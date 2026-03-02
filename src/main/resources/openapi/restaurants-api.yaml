@@ -1,0 +1,80 @@
+openapi: 3.0.1
+info:
+  title: Restaurants Microservice API
+  description: API for restaurant management in Plaza de Comidas system
+  version: 1.0.0
+  contact:
+    name: Mateo Castro
+    email: mateocastro1297@gmail.com
+
+servers:
+  - url: http://localhost:8082/api/v1/restaurants
+    description: Local server
+
+tags:
+  - name: Restaurants
+    description: Restaurant management operations
+  - name: Admin
+    description: Admin operations
+
+paths:
+  /admin/restaurant:
+    post:
+      summary: Create a new restaurant
+      operationId: createRestaurant
+      tags:
+        - Restaurants
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi/schemas/schemas-restaurant.yaml#/components/schemas/RestaurantRequest'
+      responses:
+        '201':
+          description: Restaurant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-restaurant.yaml#/components/schemas/RestaurantResponse'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Owner not found
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - NIT already exists
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Enter your JWT token in the format: Bearer <token>"
