@@ -1,5 +1,3 @@
-CREATE SCHEMA IF NOT EXISTS restaurant_management;
-
 CREATE TABLE restaurants (
    id BIGSERIAL PRIMARY KEY,
    name VARCHAR(100) NOT NULL,

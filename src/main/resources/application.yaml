@@ -12,7 +12,7 @@ eureka:
 
 spring:
   application:
-    name: ms-users
+    name: ms-restaurants
   datasource:
     url: jdbc:postgresql://localhost:5432/restaurants_db
     username: restaurant_db

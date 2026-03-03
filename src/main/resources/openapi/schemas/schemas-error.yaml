@@ -1,32 +1,34 @@
-ErrorResponse:
-  type: object
-  properties:
-    status:
-      type: integer
-      description: HTTP status code
-      example: 409
-    error:
-      type: string
-      description: Error code for client-side handling
-      example: "NIT_ALREADY_EXISTS"
-    message:
-      type: string
-      description: Human-readable error message
-      example: "Restaurant with NIT 901234567 already exists"
-    path:
-      type: string
-      description: Request path that generated the error
-      example: "/api/v1/restaurants"
-    timestamp:
-      type: string
-      format: date-time
-      description: Timestamp when the error occurred
-      example: "2026-03-02T10:30:45.123Z"
-    details:
+components:
+  schemas:
+    ErrorResponse:
       type: object
-      description: Additional error details
-      additionalProperties: true
-      example: {
-        "field": "nit",
-        "constraint": "uk_restaurants_nit"
-      }
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+          example: 409
+        error:
+          type: string
+          description: Error code for client-side handling
+          example: "NIT_ALREADY_EXISTS"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Restaurant with NIT 901234567 already exists"
+        path:
+          type: string
+          description: Request path that generated the error
+          example: "/api/v1/restaurants"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the error occurred
+          example: "2026-03-02T10:30:45.123Z"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+          example: {
+            "field": "nit",
+            "constraint": "uk_restaurants_nit"
+          }
