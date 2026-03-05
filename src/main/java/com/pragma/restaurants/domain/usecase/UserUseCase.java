@@ -1,24 +1,27 @@
 package com.pragma.restaurants.domain.usecase;
 
 import com.pragma.restaurants.domain.api.IUserServicePort;
-import com.pragma.restaurants.domain.model.User;
 import com.pragma.restaurants.domain.spi.IUserPersistencePort;
 
 public class UserUseCase implements IUserServicePort {
 
     private final IUserPersistencePort userPersistencePort;
 
+    private final String ADMIN = "ADMIN";
+
     public UserUseCase(IUserPersistencePort userPersistencePort) {
         this.userPersistencePort = userPersistencePort;
     }
 
     @Override
-    public Boolean validateOwner(Long userId) {
-        return userPersistencePort.validateOwner(userId);
-    }
+    public Boolean isAdmin(Long userId) {
+        var response = userPersistencePort.getUserById(userId)
+                .getRoles()
+                .contains(ADMIN);
 
-    @Override
-    public User getUserById(Long userId) {
-        return userPersistencePort.getUserById(userId);
+        if (!response)
+            throw new RuntimeException(String.format("User with id:%d is not admin", userId));
+
+        return true;
     }
 }

@@ -14,8 +14,8 @@ servers:
 tags:
   - name: Restaurants
     description: Restaurant management operations
-  - name: Admin
-    description: Admin operations
+#  - name: Admin
+#    description: Admin operations
 
 paths:
   /admin/restaurant:
@@ -23,8 +23,8 @@ paths:
       summary: Create a new restaurant
       operationId: createRestaurant
       tags:
+#        - Admin
         - Restaurants
-        - Admin
       security:
         - bearerAuth: []
       requestBody:
@@ -34,7 +34,7 @@ paths:
             schema:
               $ref: '../openapi/schemas/schemas-restaurant.yaml#/components/schemas/RestaurantRequest'
       responses:
-        '201':
+        '200':
           description: Restaurant created successfully
           content:
             application/json:
