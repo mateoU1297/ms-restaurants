@@ -46,6 +46,12 @@ paths:
             application/json:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
@@ -53,7 +59,7 @@ paths:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Owner not found
+          description: Admin not found
           content:
             application/json:
               schema:

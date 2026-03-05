@@ -1,11 +1,9 @@
 package com.pragma.restaurants.infrastructure.config;
 
 import com.pragma.restaurants.domain.api.IRestaurantServicePort;
-import com.pragma.restaurants.domain.api.IUserServicePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.IUserPersistencePort;
 import com.pragma.restaurants.domain.usecase.RestaurantUseCase;
-import com.pragma.restaurants.domain.usecase.UserUseCase;
 import com.pragma.restaurants.infrastructure.mapper.IRestaurantEntityMapper;
 import com.pragma.restaurants.infrastructure.mapper.IUserFeignMapper;
 import com.pragma.restaurants.infrastructure.out.feign.adapter.UserFeignAdapter;
@@ -33,17 +31,12 @@ public class BeanConfig {
 
     @Bean
     public IRestaurantServicePort restaurantServicePort() {
-        return new RestaurantUseCase(restaurantPersistencePort());
+        return new RestaurantUseCase(restaurantPersistencePort(), userPersistencePort());
     }
 
     @Bean
     public IUserPersistencePort userPersistencePort() {
         return new UserFeignAdapter(userFeignClient, userFeignMapper);
-    }
-
-    @Bean
-    public IUserServicePort userServicePort() {
-        return new UserUseCase(userPersistencePort());
     }
 
 }
