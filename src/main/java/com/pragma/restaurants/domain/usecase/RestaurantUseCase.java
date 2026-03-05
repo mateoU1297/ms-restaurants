@@ -25,11 +25,8 @@ public class RestaurantUseCase implements IRestaurantServicePort {
                 .getRoles()
                 .contains(ADMIN);
 
-        if (!isAdmin) {
-            throw new UserIsNotAdminException(
-                    String.format("User %d is not an admin", restaurant.getOwnerId())
-            );
-        }
+        if (!isAdmin)
+            throw new UserIsNotAdminException(String.format("User %d is not an admin", restaurant.getOwnerId()));
 
         return restaurantPersistencePort.save(restaurant);
     }
