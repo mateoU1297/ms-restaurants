@@ -1,0 +1,83 @@
+components:
+  schemas:
+    DishRequest:
+      type: object
+      required:
+        - name
+        - price
+        - description
+        - urlImage
+        - categoryId
+        - restaurantId
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          description: Dish name
+          example: "Hamburguesa Clásica"
+        price:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Dish price (positive integer greater than 0)
+          example: 25000
+        description:
+          type: string
+          maxLength: 500
+          minLength: 1
+          description: Dish description
+          example: "Hamburguesa con carne de res, lechuga, tomate y queso"
+        urlImage:
+          type: string
+          pattern: '^(http|https)://.*$'
+          description: Dish image URL
+          example: "https://storage.com/hamburguesa.png"
+        categoryId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Category ID
+          example: 1
+        restaurantId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Restaurant ID the dish belongs to
+          example: 1
+
+    DishResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: "Hamburguesa Clásica"
+        price:
+          type: integer
+          format: int32
+          example: 25000
+        description:
+          type: string
+          example: "Hamburguesa con carne de res, lechuga, tomate y queso"
+        urlImage:
+          type: string
+          example: "https://storage.com/hamburguesa.png"
+        active:
+          type: boolean
+          example: true
+        categoryId:
+          type: integer
+          format: int64
+          example: 1
+        restaurantId:
+          type: integer
+          format: int64
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-03-02T10:30:45.123Z"
