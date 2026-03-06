@@ -3,6 +3,7 @@ package com.pragma.restaurants.infrastructure.exception;
 import com.pragma.restaurants.application.dto.response.ErrorResponse;
 import com.pragma.restaurants.domain.exception.DomainException;
 import com.pragma.restaurants.domain.exception.UserIsNotAdminException;
+import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -210,6 +211,22 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.internalServerError().body(errorResponse);
+    }
+
+    @ExceptionHandler(UserIsNotOwnerException.class)
+    public ResponseEntity<ErrorResponse> handleUserIsNotOwner(
+            UserIsNotOwnerException ex, HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .error(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .timestamp(LocalDateTime.now())
+                .details(ex.getDetails())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
 }
