@@ -175,6 +175,34 @@ paths:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
 
+  /owner/employee:
+    post:
+      summary: Associate employee to restaurant
+      operationId: createRestaurantEmployee
+      tags:
+        - Restaurants
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi/schemas/schemas-restaurant-employee.yaml#/components/schemas/RestaurantEmployeeRequest'
+      responses:
+        '200':
+          description: Employee associated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-restaurant-employee.yaml#/components/schemas/RestaurantEmployeeResponse'
+        '403':
+          description: Forbidden - User is not the restaurant owner
+        '404':
+          description: Restaurant not found
+        '409':
+          description: Employee already associated to this restaurant
+
 components:
   securitySchemes:
     bearerAuth:
