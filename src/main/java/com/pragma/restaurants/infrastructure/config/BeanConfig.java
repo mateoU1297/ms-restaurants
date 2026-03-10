@@ -18,6 +18,7 @@ import com.pragma.restaurants.infrastructure.out.jpa.adapter.RestaurantJpaAdapte
 import com.pragma.restaurants.infrastructure.out.securitycontext.adapter.SecurityContextAdapter;
 import com.pragma.restaurants.infrastructure.repository.DishRepository;
 import com.pragma.restaurants.infrastructure.repository.RestaurantRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,8 @@ public class BeanConfig {
 
     private final IUserFeignClient userFeignClient;
     private final IUserFeignMapper userFeignMapper;
+
+    private final HttpServletRequest httpServletRequest;
 
     @Bean
     public IRestaurantPersistencePort restaurantPersistencePort() {
@@ -56,7 +59,7 @@ public class BeanConfig {
 
     @Bean
     public ISecurityContextPort securityContextPort() {
-        return new SecurityContextAdapter();
+        return new SecurityContextAdapter(httpServletRequest);
     }
 
     @Bean
