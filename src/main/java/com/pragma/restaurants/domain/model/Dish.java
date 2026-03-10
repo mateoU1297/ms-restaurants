@@ -1,5 +1,7 @@
 package com.pragma.restaurants.domain.model;
 
+import java.time.LocalDateTime;
+
 public class Dish {
     private Long id;
     private String name;
@@ -9,12 +11,13 @@ public class Dish {
     private Boolean active;
     private Long restaurantId;
     private Long categoryId;
+    private LocalDateTime createdAt;
 
     public Dish() {
     }
 
     public Dish(Long id, String name, Integer price, String description, String urlImage, Boolean active,
-                Long restaurantId, Long categoryId) {
+                Long restaurantId, Long categoryId, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -23,6 +26,7 @@ public class Dish {
         this.active = active;
         this.restaurantId = restaurantId;
         this.categoryId = categoryId;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -87,5 +91,13 @@ public class Dish {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

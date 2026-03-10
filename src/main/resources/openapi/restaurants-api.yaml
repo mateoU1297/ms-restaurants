@@ -128,6 +128,81 @@ paths:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
 
+  /owner/dish/{dishId}:
+    put:
+      summary: Update dish price and description
+      operationId: updateDish
+      tags:
+        - Dishes
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: dishId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi/schemas/schemas-dish.yaml#/components/schemas/DishUpdateRequest'
+      responses:
+        '200':
+          description: Dish updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-dish.yaml#/components/schemas/DishResponse'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User is not the restaurant owner
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Dish not found
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+
+  /owner/employee:
+    post:
+      summary: Associate employee to restaurant
+      operationId: createRestaurantEmployee
+      tags:
+        - Restaurants
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi/schemas/schemas-restaurant-employee.yaml#/components/schemas/RestaurantEmployeeRequest'
+      responses:
+        '200':
+          description: Employee associated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-restaurant-employee.yaml#/components/schemas/RestaurantEmployeeResponse'
+        '403':
+          description: Forbidden - User is not the restaurant owner
+        '404':
+          description: Restaurant not found
+        '409':
+          description: Employee already associated to this restaurant
+
 components:
   securitySchemes:
     bearerAuth:

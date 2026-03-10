@@ -5,4 +5,8 @@ import com.pragma.restaurants.domain.model.Dish;
 public interface IDishPersistencePort {
 
     Dish save(Dish dish);
+
+    Dish findById(Long id);
+
+    Dish update(Dish dish);
 }

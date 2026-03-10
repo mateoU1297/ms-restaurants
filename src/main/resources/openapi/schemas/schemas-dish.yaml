@@ -81,3 +81,22 @@ components:
           type: string
           format: date-time
           example: "2026-03-02T10:30:45.123Z"
+
+    DishUpdateRequest:
+      type: object
+      required:
+        - price
+        - description
+      properties:
+        price:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Dish price (positive integer greater than 0)
+          example: 30000
+        description:
+          type: string
+          maxLength: 500
+          minLength: 1
+          description: Dish description
+          example: "Hamburguesa con carne de res y queso doble"

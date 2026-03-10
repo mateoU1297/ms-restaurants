@@ -1,26 +1,29 @@
 package com.pragma.restaurants.infrastructure.out.securitycontext.adapter;
 
 import com.pragma.restaurants.domain.spi.ISecurityContextPort;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @RequiredArgsConstructor
 public class SecurityContextAdapter implements ISecurityContextPort {
 
+    private final HttpServletRequest httpServletRequest;
+
     @Override
     public Long getAuthenticatedUserId() {
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-        return jwt.getClaim("id");
+        String userId = httpServletRequest.getHeader("X-User-Id");
+        if (userId == null) {
+            throw new RuntimeException("X-User-Id header not found");
+        }
+        return Long.parseLong(userId);
     }
 
     @Override
     public String getAuthenticatedUserRoles() {
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-        return jwt.getClaim("roles");
+        String roles = httpServletRequest.getHeader("X-User-Roles");
+        if (roles == null) {
+            throw new RuntimeException("X-User-Roles header not found");
+        }
+        return roles;
     }
 }
