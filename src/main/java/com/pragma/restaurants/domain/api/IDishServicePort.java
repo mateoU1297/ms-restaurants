@@ -1,6 +1,7 @@
 package com.pragma.restaurants.domain.api;
 
 import com.pragma.restaurants.domain.model.Dish;
+import com.pragma.restaurants.domain.model.Page;
 
 public interface IDishServicePort {
 
@@ -9,4 +10,6 @@ public interface IDishServicePort {
     Dish update(Long dishId, Dish dish);
 
     Dish toggleActive(Long dishId);
+
+    Page<Dish> findByRestaurant(Long restaurantId, Long categoryId, int page, int size);
 }
