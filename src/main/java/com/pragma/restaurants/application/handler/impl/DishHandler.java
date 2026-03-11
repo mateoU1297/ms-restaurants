@@ -3,12 +3,15 @@ package com.pragma.restaurants.application.handler.impl;
 import com.pragma.restaurants.application.dto.DishRequest;
 import com.pragma.restaurants.application.dto.DishResponse;
 import com.pragma.restaurants.application.dto.DishUpdateRequest;
+import com.pragma.restaurants.application.dto.PagedDishResponse;
 import com.pragma.restaurants.application.handler.IDishHandler;
+import com.pragma.restaurants.application.mapper.IDishPageMapper;
 import com.pragma.restaurants.application.mapper.IDishRequestMapper;
 import com.pragma.restaurants.application.mapper.IDishResponseMapper;
 import com.pragma.restaurants.application.mapper.IDishUpdateRequestMapper;
 import com.pragma.restaurants.domain.api.IDishServicePort;
 import com.pragma.restaurants.domain.model.Dish;
+import com.pragma.restaurants.domain.model.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ public class DishHandler implements IDishHandler {
     private final IDishRequestMapper dishRequestMapper;
     private final IDishResponseMapper dishResponseMapper;
     private final IDishUpdateRequestMapper dishUpdateRequestMapper;
+    private final IDishPageMapper dishPageMapper;
 
     @Override
     public DishResponse createDish(DishRequest dishRequest) {
@@ -38,5 +42,11 @@ public class DishHandler implements IDishHandler {
     @Override
     public DishResponse toggleDishActive(Long dishId) {
         return dishResponseMapper.toResponse(dishServicePort.toggleActive(dishId));
+    }
+
+    @Override
+    public PagedDishResponse listDishesByRestaurant(Long restaurantId, Long categoryId, int page, int size) {
+        Page<Dish> dishPage = dishServicePort.findByRestaurant(restaurantId, categoryId, page, size);
+        return dishPageMapper.toResponse(dishPage);
     }
 }

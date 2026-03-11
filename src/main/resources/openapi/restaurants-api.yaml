@@ -273,6 +273,53 @@ paths:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
 
+  /clients/restaurants/{restaurantId}/dishes:
+    get:
+      summary: List dishes of a restaurant filtered by category
+      operationId: listDishesByRestaurant
+      tags:
+        - Dishes
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: categoryId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+      responses:
+        '200':
+          description: Dishes listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-dish.yaml#/components/schemas/PagedDishResponse'
+        '404':
+          description: Restaurant not found
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:

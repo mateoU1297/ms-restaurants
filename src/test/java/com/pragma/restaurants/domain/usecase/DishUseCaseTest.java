@@ -2,6 +2,7 @@ package com.pragma.restaurants.domain.usecase;
 
 import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import com.pragma.restaurants.domain.model.Dish;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
@@ -13,11 +14,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -259,6 +263,65 @@ class DishUseCaseTest {
         dishUseCase.toggleActive(1L);
 
         verify(dishPersistencePort).findById(1L);
+    }
+
+    @Test
+    void findByRestaurant_shouldReturnPagedDishes() {
+        List<Dish> dishes = List.of(buildExistingDish());
+        Page<Dish> expectedPage = new Page<>(dishes, 0, 10, 1L, 1, true);
+
+        when(dishPersistencePort.findByRestaurant(1L, null, 0, 10)).thenReturn(expectedPage);
+
+        Page<Dish> result = dishUseCase.findByRestaurant(1L, null, 0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(0, result.getPageNumber());
+        assertEquals(10, result.getPageSize());
+        assertEquals(1L, result.getTotalElements());
+        assertTrue(result.isLast());
+    }
+
+    @Test
+    void findByRestaurant_shouldDelegateToPersistencePort() {
+        Page<Dish> expectedPage = new Page<>(List.of(), 0, 10, 0L, 0, true);
+        when(dishPersistencePort.findByRestaurant(1L, 2L, 0, 10)).thenReturn(expectedPage);
+
+        dishUseCase.findByRestaurant(1L, 2L, 0, 10);
+
+        verify(dishPersistencePort).findByRestaurant(1L, 2L, 0, 10);
+    }
+
+    @Test
+    void findByRestaurant_withCategoryFilter_shouldPassCategoryIdToPersistence() {
+        Page<Dish> expectedPage = new Page<>(List.of(), 0, 10, 0L, 0, true);
+        when(dishPersistencePort.findByRestaurant(1L, 3L, 0, 10)).thenReturn(expectedPage);
+
+        dishUseCase.findByRestaurant(1L, 3L, 0, 10);
+
+        verify(dishPersistencePort).findByRestaurant(1L, 3L, 0, 10);
+    }
+
+    @Test
+    void findByRestaurant_withoutCategoryFilter_shouldPassNullCategoryId() {
+        Page<Dish> expectedPage = new Page<>(List.of(), 0, 10, 0L, 0, true);
+        when(dishPersistencePort.findByRestaurant(1L, null, 0, 10)).thenReturn(expectedPage);
+
+        dishUseCase.findByRestaurant(1L, null, 0, 10);
+
+        verify(dishPersistencePort).findByRestaurant(1L, null, 0, 10);
+    }
+
+    @Test
+    void findByRestaurant_shouldNotInteractWithRestaurantOrSecurityPort() {
+        Page<Dish> expectedPage = new Page<>(List.of(), 0, 10, 0L, 0, true);
+        when(dishPersistencePort.findByRestaurant(any(), any(), anyInt(), anyInt()))
+                .thenReturn(expectedPage);
+
+        dishUseCase.findByRestaurant(1L, null, 0, 10);
+
+        verifyNoInteractions(restaurantPersistencePort);
+        verifyNoInteractions(securityContextPort);
     }
 
     private Dish buildExistingDish() {

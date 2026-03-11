@@ -3,6 +3,7 @@ package com.pragma.restaurants.domain.usecase;
 import com.pragma.restaurants.domain.api.IDishServicePort;
 import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import com.pragma.restaurants.domain.model.Dish;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
@@ -46,6 +47,11 @@ public class DishUseCase implements IDishServicePort {
         validateOwnership(existing.getRestaurantId());
         existing.setActive(!existing.getActive());
         return dishPersistencePort.update(existing);
+    }
+
+    @Override
+    public Page<Dish> findByRestaurant(Long restaurantId, Long categoryId, int page, int size) {
+        return dishPersistencePort.findByRestaurant(restaurantId, categoryId, page, size);
     }
 
     private void validateOwnership(Long restaurantId) {

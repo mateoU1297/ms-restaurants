@@ -3,6 +3,7 @@ package com.pragma.restaurants.infrastructure.input.rest;
 import com.pragma.restaurants.application.dto.DishRequest;
 import com.pragma.restaurants.application.dto.DishResponse;
 import com.pragma.restaurants.application.dto.DishUpdateRequest;
+import com.pragma.restaurants.application.dto.PagedDishResponse;
 import com.pragma.restaurants.application.handler.IDishHandler;
 import com.pragma.restaurants.infrastructure.adapter.in.rest.api.DishesApi;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,12 @@ public class DishController implements DishesApi {
     public ResponseEntity<DishResponse> toggleDishActive(Long dishId) {
         DishResponse dishResponse = dishHandler.toggleDishActive(dishId);
         return ResponseEntity.ok(dishResponse);
+    }
+
+    @Override
+    public ResponseEntity<PagedDishResponse> listDishesByRestaurant(Long restaurantId, Long categoryId, Integer page,
+                                                                    Integer size) {
+        PagedDishResponse pagedDishResponse = dishHandler.listDishesByRestaurant(restaurantId, categoryId, page, size);
+        return ResponseEntity.ok(pagedDishResponse);
     }
 }
