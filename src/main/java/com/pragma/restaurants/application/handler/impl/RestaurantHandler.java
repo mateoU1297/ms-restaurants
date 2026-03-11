@@ -1,11 +1,14 @@
 package com.pragma.restaurants.application.handler.impl;
 
+import com.pragma.restaurants.application.dto.PagedRestaurantResponse;
 import com.pragma.restaurants.application.dto.RestaurantRequest;
 import com.pragma.restaurants.application.dto.RestaurantResponse;
 import com.pragma.restaurants.application.handler.IRestaurantHandler;
+import com.pragma.restaurants.application.mapper.IRestaurantPageMapper;
 import com.pragma.restaurants.application.mapper.IRestaurantRequestMapper;
 import com.pragma.restaurants.application.mapper.IRestaurantResponseMapper;
 import com.pragma.restaurants.domain.api.IRestaurantServicePort;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ public class RestaurantHandler implements IRestaurantHandler {
 
     private final IRestaurantRequestMapper restaurantRequestMapper;
     private final IRestaurantResponseMapper restaurantResponseMapper;
+    private final IRestaurantPageMapper restaurantPageMapper;
 
     private final IRestaurantServicePort restaurantServicePort;
 
@@ -25,5 +29,11 @@ public class RestaurantHandler implements IRestaurantHandler {
     public RestaurantResponse createRestaurant(RestaurantRequest restaurantRequest) {
         Restaurant response = restaurantServicePort.save(restaurantRequestMapper.toDomain(restaurantRequest));
         return restaurantResponseMapper.toResponse(response);
+    }
+
+    @Override
+    public PagedRestaurantResponse listRestaurants(int page, int size) {
+        Page<Restaurant> restaurantPage = restaurantServicePort.findAll(page, size);
+        return restaurantPageMapper.toResponse(restaurantPage);
     }
 }
