@@ -76,3 +76,37 @@ components:
           type: string
           format: date-time
           example: "2026-03-02T10:30:45.123Z"
+
+    RestaurantSummaryResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "La Hamburguesería 123"
+        urlLogo:
+          type: string
+          example: "https://storage.com/logo123.png"
+
+    PagedRestaurantResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestaurantSummaryResponse'
+        pageNumber:
+          type: integer
+          example: 0
+        pageSize:
+          type: integer
+          example: 10
+        totalElements:
+          type: integer
+          format: int64
+          example: 25
+        totalPages:
+          type: integer
+          example: 3
+        last:
+          type: boolean
+          example: false

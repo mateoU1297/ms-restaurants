@@ -1,6 +1,7 @@
 package com.pragma.restaurants.domain.usecase;
 
 import com.pragma.restaurants.domain.exception.UserIsNotAdminException;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.model.User;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,5 +88,53 @@ class RestaurantUseCaseTest {
         restaurantUseCase.save(restaurant);
 
         verify(userPersistencePort).getUserById(10L);
+    }
+
+    @Test
+    void findAll_shouldReturnPagedRestaurants() {
+        List<Restaurant> restaurants = List.of(restaurant);
+        Page<Restaurant> expectedPage = new Page<>(restaurants, 0, 10, 1L, 1, true);
+
+        when(restaurantPersistencePort.findAll(0, 10)).thenReturn(expectedPage);
+
+        Page<Restaurant> result = restaurantUseCase.findAll(0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(0, result.getPageNumber());
+        assertEquals(10, result.getPageSize());
+        assertEquals(1L, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertTrue(result.isLast());
+    }
+
+    @Test
+    void findAll_shouldDelegateToPeristencePort() {
+        Page<Restaurant> expectedPage = new Page<>(List.of(), 0, 10, 0L, 0, true);
+        when(restaurantPersistencePort.findAll(0, 10)).thenReturn(expectedPage);
+
+        restaurantUseCase.findAll(0, 10);
+
+        verify(restaurantPersistencePort).findAll(0, 10);
+    }
+
+    @Test
+    void findAll_shouldNotInteractWithUserPort() {
+        Page<Restaurant> expectedPage = new Page<>(List.of(), 0, 10, 0L, 0, true);
+        when(restaurantPersistencePort.findAll(0, 10)).thenReturn(expectedPage);
+
+        restaurantUseCase.findAll(0, 10);
+
+        verifyNoInteractions(userPersistencePort);
+    }
+
+    @Test
+    void findAll_shouldPassCorrectPageAndSizeParameters() {
+        Page<Restaurant> expectedPage = new Page<>(List.of(), 2, 5, 0L, 0, true);
+        when(restaurantPersistencePort.findAll(2, 5)).thenReturn(expectedPage);
+
+        restaurantUseCase.findAll(2, 5);
+
+        verify(restaurantPersistencePort).findAll(2, 5);
     }
 }

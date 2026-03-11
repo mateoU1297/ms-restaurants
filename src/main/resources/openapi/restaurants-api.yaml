@@ -238,6 +238,41 @@ paths:
         '409':
           description: Employee already associated to this restaurant
 
+  /clients/restaurants:
+    get:
+      summary: List all restaurants paginated and alphabetically ordered
+      operationId: listRestaurants
+      tags:
+        - Restaurants
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+      responses:
+        '200':
+          description: Restaurants listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-restaurant.yaml#/components/schemas/PagedRestaurantResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:

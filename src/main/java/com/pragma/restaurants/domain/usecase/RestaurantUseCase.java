@@ -2,6 +2,7 @@ package com.pragma.restaurants.domain.usecase;
 
 import com.pragma.restaurants.domain.api.IRestaurantServicePort;
 import com.pragma.restaurants.domain.exception.UserIsNotAdminException;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.IUserPersistencePort;
@@ -29,5 +30,10 @@ public class RestaurantUseCase implements IRestaurantServicePort {
             throw new UserIsNotAdminException(String.format("User %d is not an admin", restaurant.getOwnerId()));
 
         return restaurantPersistencePort.save(restaurant);
+    }
+
+    @Override
+    public Page<Restaurant> findAll(int page, int size) {
+        return restaurantPersistencePort.findAll(page, size);
     }
 }

@@ -1,5 +1,6 @@
 package com.pragma.restaurants.infrastructure.input.rest;
 
+import com.pragma.restaurants.application.dto.PagedRestaurantResponse;
 import com.pragma.restaurants.application.dto.RestaurantEmployeeRequest;
 import com.pragma.restaurants.application.dto.RestaurantEmployeeResponse;
 import com.pragma.restaurants.application.dto.RestaurantRequest;
@@ -30,5 +31,11 @@ public class RestaurantController implements RestaurantsApi {
         RestaurantEmployeeResponse restaurantEmployeeResponse = restaurantEmployeeHandler
                 .createRestaurantEmployee(restaurantEmployeeRequest);
         return ResponseEntity.ok(restaurantEmployeeResponse);
+    }
+
+    @Override
+    public ResponseEntity<PagedRestaurantResponse> listRestaurants(Integer page, Integer size) {
+        PagedRestaurantResponse pagedRestaurantResponse = restaurantHandler.listRestaurants(page, size);
+        return ResponseEntity.ok(pagedRestaurantResponse);
     }
 }
