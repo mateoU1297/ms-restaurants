@@ -26,4 +26,10 @@ public class DishController implements DishesApi {
         DishResponse dishResponse = dishHandler.updateDish(dishId, dishUpdateRequest);
         return ResponseEntity.ok(dishResponse);
     }
+
+    @Override
+    public ResponseEntity<DishResponse> toggleDishActive(Long dishId) {
+        DishResponse dishResponse = dishHandler.toggleDishActive(dishId);
+        return ResponseEntity.ok(dishResponse);
+    }
 }

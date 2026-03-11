@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -193,6 +194,71 @@ class DishUseCaseTest {
         dishUseCase.update(1L, new Dish());
 
         verify(restaurantPersistencePort).findById(existing.getRestaurantId());
+    }
+
+    @Test
+    void toggleActive_whenDishIsActiveAndUserIsOwner_shouldSetActiveFalse() {
+        Dish existing = buildExistingDish();
+        when(dishPersistencePort.findById(1L)).thenReturn(existing);
+        when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
+        when(dishPersistencePort.update(existing)).thenReturn(existing);
+
+        Dish result = dishUseCase.toggleActive(1L);
+
+        assertFalse(result.getActive());
+        verify(dishPersistencePort).update(existing);
+    }
+
+    @Test
+    void toggleActive_whenDishIsInactiveAndUserIsOwner_shouldSetActiveTrue() {
+        Dish existing = buildExistingDish();
+        existing.setActive(false);
+        when(dishPersistencePort.findById(1L)).thenReturn(existing);
+        when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
+        when(dishPersistencePort.update(existing)).thenReturn(existing);
+
+        Dish result = dishUseCase.toggleActive(1L);
+
+        assertTrue(result.getActive());
+        verify(dishPersistencePort).update(existing);
+    }
+
+    @Test
+    void toggleActive_whenUserIsNotOwner_shouldThrowUserIsNotOwnerException() {
+        when(dishPersistencePort.findById(1L)).thenReturn(buildExistingDish());
+        when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(99L);
+
+        assertThrows(UserIsNotOwnerException.class,
+                () -> dishUseCase.toggleActive(1L));
+
+        verify(dishPersistencePort, never()).update(any());
+    }
+
+    @Test
+    void toggleActive_whenUserIsNotOwner_shouldNotPersistChanges() {
+        when(dishPersistencePort.findById(1L)).thenReturn(buildExistingDish());
+        when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(99L);
+
+        assertThrows(UserIsNotOwnerException.class,
+                () -> dishUseCase.toggleActive(1L));
+
+        verifyNoMoreInteractions(dishPersistencePort);
+    }
+
+    @Test
+    void toggleActive_shouldFetchDishWithCorrectId() {
+        when(dishPersistencePort.findById(1L)).thenReturn(buildExistingDish());
+        when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
+        when(dishPersistencePort.update(any())).thenReturn(buildExistingDish());
+
+        dishUseCase.toggleActive(1L);
+
+        verify(dishPersistencePort).findById(1L);
     }
 
     private Dish buildExistingDish() {

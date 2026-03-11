@@ -34,4 +34,9 @@ public class DishHandler implements IDishHandler {
         Dish dish = dishUpdateRequestMapper.toDomain(dishUpdateRequest);
         return dishResponseMapper.toResponse(dishServicePort.update(dishId, dish));
     }
+
+    @Override
+    public DishResponse toggleDishActive(Long dishId) {
+        return dishResponseMapper.toResponse(dishServicePort.toggleActive(dishId));
+    }
 }

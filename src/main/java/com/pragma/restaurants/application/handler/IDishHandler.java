@@ -9,4 +9,6 @@ public interface IDishHandler {
     DishResponse createDish(DishRequest dishRequest);
 
     DishResponse updateDish(Long dishId, DishUpdateRequest dishUpdateRequest);
+
+    DishResponse toggleDishActive(Long dishId);
 }

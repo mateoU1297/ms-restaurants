@@ -175,6 +175,41 @@ paths:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
 
+  /owner/dish/{dishId}/toggle-active:
+    patch:
+      summary: Enable or disable a dish
+      operationId: toggleDishActive
+      tags:
+        - Dishes
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: dishId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Dish status toggled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-dish.yaml#/components/schemas/DishResponse'
+        '403':
+          description: Forbidden - User is not the restaurant owner
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Dish not found
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+
   /owner/employee:
     post:
       summary: Associate employee to restaurant

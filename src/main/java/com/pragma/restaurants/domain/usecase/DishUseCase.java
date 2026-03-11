@@ -40,6 +40,14 @@ public class DishUseCase implements IDishServicePort {
         return dishPersistencePort.update(dishExisting);
     }
 
+    @Override
+    public Dish toggleActive(Long dishId) {
+        Dish existing = dishPersistencePort.findById(dishId);
+        validateOwnership(existing.getRestaurantId());
+        existing.setActive(!existing.getActive());
+        return dishPersistencePort.update(existing);
+    }
+
     private void validateOwnership(Long restaurantId) {
         Restaurant restaurant = restaurantPersistencePort.findById(restaurantId);
         Long authenticatedUserId = securityContextPort.getAuthenticatedUserId();
