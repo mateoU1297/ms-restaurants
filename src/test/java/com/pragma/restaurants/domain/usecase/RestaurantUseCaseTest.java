@@ -1,6 +1,6 @@
 package com.pragma.restaurants.domain.usecase;
 
-import com.pragma.restaurants.domain.exception.UserIsNotAdminException;
+import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.model.User;
@@ -16,21 +16,30 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RestaurantUseCaseTest {
 
-    @Mock private IRestaurantPersistencePort restaurantPersistencePort;
-    @Mock private IUserPersistencePort userPersistencePort;
+    @Mock
+    private IRestaurantPersistencePort restaurantPersistencePort;
+    @Mock
+    private IUserPersistencePort userPersistencePort;
 
     @InjectMocks
     private RestaurantUseCase restaurantUseCase;
 
     private Restaurant restaurant;
-    private User adminUser;
-    private User nonAdminUser;
+    private User ownerUser;
+    private User nonOwnerUser;
 
     @BeforeEach
     void setUp() {
@@ -39,18 +48,18 @@ class RestaurantUseCaseTest {
         restaurant.setOwnerId(10L);
         restaurant.setName("Test Restaurant");
 
-        adminUser = new User();
-        adminUser.setId(10L);
-        adminUser.setRoles(Set.of("ADMIN"));
+        ownerUser = new User();
+        ownerUser.setId(10L);
+        ownerUser.setRoles(Set.of("OWNER"));
 
-        nonAdminUser = new User();
-        nonAdminUser.setId(10L);
-        nonAdminUser.setRoles(Set.of("OWNER"));
+        nonOwnerUser = new User();
+        nonOwnerUser.setId(10L);
+        nonOwnerUser.setRoles(Set.of("ADMIN"));
     }
 
     @Test
     void save_whenOwnerIsAdmin_shouldSaveAndReturnRestaurant() {
-        when(userPersistencePort.getUserById(10L)).thenReturn(adminUser);
+        when(userPersistencePort.getUserById(10L)).thenReturn(ownerUser);
         when(restaurantPersistencePort.save(restaurant)).thenReturn(restaurant);
 
         Restaurant result = restaurantUseCase.save(restaurant);
@@ -61,10 +70,10 @@ class RestaurantUseCaseTest {
     }
 
     @Test
-    void save_whenOwnerIsNotAdmin_shouldThrowUserIsNotAdminException() {
-        when(userPersistencePort.getUserById(10L)).thenReturn(nonAdminUser);
+    void save_whenOwnerIsNotAdmin_shouldThrowUserIsNotOwnerException() {
+        when(userPersistencePort.getUserById(10L)).thenReturn(nonOwnerUser);
 
-        assertThrows(UserIsNotAdminException.class,
+        assertThrows(UserIsNotOwnerException.class,
                 () -> restaurantUseCase.save(restaurant));
 
         verifyNoInteractions(restaurantPersistencePort);
@@ -72,9 +81,9 @@ class RestaurantUseCaseTest {
 
     @Test
     void save_whenOwnerIsNotAdmin_shouldNotPersistRestaurant() {
-        when(userPersistencePort.getUserById(10L)).thenReturn(nonAdminUser);
+        when(userPersistencePort.getUserById(10L)).thenReturn(nonOwnerUser);
 
-        assertThrows(UserIsNotAdminException.class,
+        assertThrows(UserIsNotOwnerException.class,
                 () -> restaurantUseCase.save(restaurant));
 
         verify(restaurantPersistencePort, never()).save(any());
@@ -82,7 +91,7 @@ class RestaurantUseCaseTest {
 
     @Test
     void save_shouldFetchUserWithCorrectOwnerId() {
-        when(userPersistencePort.getUserById(10L)).thenReturn(adminUser);
+        when(userPersistencePort.getUserById(10L)).thenReturn(ownerUser);
         when(restaurantPersistencePort.save(any())).thenReturn(restaurant);
 
         restaurantUseCase.save(restaurant);

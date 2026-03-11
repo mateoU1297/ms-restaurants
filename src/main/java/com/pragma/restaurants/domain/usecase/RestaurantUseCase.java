@@ -1,7 +1,7 @@
 package com.pragma.restaurants.domain.usecase;
 
 import com.pragma.restaurants.domain.api.IRestaurantServicePort;
-import com.pragma.restaurants.domain.exception.UserIsNotAdminException;
+import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
@@ -12,7 +12,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IUserPersistencePort userPersistencePort;
 
-    private static final String ADMIN = "ADMIN";
+    private static final String OWNER = "OWNER";
 
     public RestaurantUseCase(IRestaurantPersistencePort restaurantPersistencePort,
                              IUserPersistencePort userPersistencePort) {
@@ -22,12 +22,12 @@ public class RestaurantUseCase implements IRestaurantServicePort {
 
     @Override
     public Restaurant save(Restaurant restaurant) {
-        boolean isAdmin = userPersistencePort.getUserById(restaurant.getOwnerId())
+        boolean isOwner = userPersistencePort.getUserById(restaurant.getOwnerId())
                 .getRoles()
-                .contains(ADMIN);
+                .contains(OWNER);
 
-        if (!isAdmin)
-            throw new UserIsNotAdminException(String.format("User %d is not an admin", restaurant.getOwnerId()));
+        if (!isOwner)
+            throw new UserIsNotOwnerException(String.format("User %d is not an owner", restaurant.getOwnerId()));
 
         return restaurantPersistencePort.save(restaurant);
     }
