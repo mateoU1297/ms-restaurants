@@ -7,4 +7,6 @@ public interface IDishServicePort {
     Dish save(Dish dish);
 
     Dish update(Long dishId, Dish dish);
+
+    Dish toggleActive(Long dishId);
 }
