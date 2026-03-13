@@ -3,6 +3,8 @@ package com.pragma.restaurants.domain.usecase;
 import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
+import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
+import com.pragma.restaurants.domain.exception.OrderNotPendingException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.OrderDish;
@@ -260,5 +262,120 @@ class OrderUseCaseTest {
 
         verifyNoInteractions(restaurantPersistencePort);
         verifyNoInteractions(dishPersistencePort);
+    }
+
+    @Test
+    void assignEmployee_whenOrderIsPendingAndFromRestaurant_shouldAssignEmployeeAndChangeStatus() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.update(order)).thenReturn(order);
+
+        Order result = orderUseCase.assignEmployee(1L);
+
+        assertNotNull(result);
+        assertEquals(20L, order.getEmployeeId());
+        assertEquals(OrderStatus.IN_PREPARATION, order.getStatus());
+        verify(orderPersistencePort).update(order);
+    }
+
+    @Test
+    void assignEmployee_whenOrderNotFromRestaurant_shouldThrowOrderNotFromRestaurantException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(99L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotFromRestaurantException.class,
+                () -> orderUseCase.assignEmployee(1L));
+
+        verify(orderPersistencePort, never()).update(any());
+    }
+
+    @Test
+    void assignEmployee_whenOrderIsNotPending_shouldThrowOrderNotPendingException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotPendingException.class,
+                () -> orderUseCase.assignEmployee(1L));
+
+        verify(orderPersistencePort, never()).update(any());
+    }
+
+    @Test
+    void assignEmployee_whenOrderIsDelivered_shouldThrowOrderNotPendingException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.DELIVERED);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotPendingException.class,
+                () -> orderUseCase.assignEmployee(1L));
+
+        verify(orderPersistencePort, never()).update(any());
+    }
+
+    @Test
+    void assignEmployee_shouldGetEmployeeIdFromSecurityContext() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.update(any())).thenReturn(order);
+
+        orderUseCase.assignEmployee(1L);
+
+        verify(securityContextPort).getAuthenticatedUserId();
+    }
+
+    @Test
+    void assignEmployee_shouldFetchOrderWithCorrectId() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.update(any())).thenReturn(order);
+
+        orderUseCase.assignEmployee(1L);
+
+        verify(orderPersistencePort).findById(1L);
+    }
+
+    @Test
+    void assignEmployee_shouldValidateRestaurantFromEmployeeAssignment() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.update(any())).thenReturn(order);
+
+        orderUseCase.assignEmployee(1L);
+
+        verify(restaurantEmployeePersistencePort).findRestaurantIdByEmployeeId(20L);
     }
 }

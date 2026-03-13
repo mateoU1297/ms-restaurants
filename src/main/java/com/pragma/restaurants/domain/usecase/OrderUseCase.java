@@ -4,6 +4,8 @@ import com.pragma.restaurants.domain.api.IOrderServicePort;
 import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
+import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
+import com.pragma.restaurants.domain.exception.OrderNotPendingException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.Page;
@@ -58,6 +60,29 @@ public class OrderUseCase implements IOrderServicePort {
         Long employeeId = securityContextPort.getAuthenticatedUserId();
         Long restaurantId = restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(employeeId);
         return orderPersistencePort.findByRestaurantAndStatus(restaurantId, status, page, size);
+    }
+
+    @Override
+    public Order assignEmployee(Long orderId) {
+        Long employeeId = securityContextPort.getAuthenticatedUserId();
+        Long restaurantId = restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(employeeId);
+
+        Order order = orderPersistencePort.findById(orderId);
+
+        if (!order.getRestaurantId().equals(restaurantId))
+            throw new OrderNotFromRestaurantException(
+                    String.format("Order %d does not belong to restaurant %d", orderId, restaurantId)
+            );
+
+        if (!order.getStatus().equals(OrderStatus.PENDING))
+            throw new OrderNotPendingException(
+                    String.format("Order %d is not in PENDING status", orderId)
+            );
+
+        order.setEmployeeId(employeeId);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+
+        return orderPersistencePort.update(order);
     }
 
     private void validateDishes(Order order) {

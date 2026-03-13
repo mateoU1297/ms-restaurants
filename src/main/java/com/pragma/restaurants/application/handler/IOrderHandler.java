@@ -9,4 +9,6 @@ public interface IOrderHandler {
     OrderResponse createOrder(OrderRequest orderRequest);
 
     PagedOrderResponse listOrdersByStatus(String status, int page, int size);
+
+    OrderResponse assignEmployeeToOrder(Long orderId);
 }

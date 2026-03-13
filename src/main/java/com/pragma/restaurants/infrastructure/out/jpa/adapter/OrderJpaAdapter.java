@@ -4,6 +4,7 @@ import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.enums.OrderStatus;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
+import com.pragma.restaurants.infrastructure.exception.OrderNotFoundException;
 import com.pragma.restaurants.infrastructure.mapper.IOrderEntityMapper;
 import com.pragma.restaurants.infrastructure.out.jpa.entity.OrderEntity;
 import com.pragma.restaurants.infrastructure.repository.OrderRepository;
@@ -52,5 +53,24 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
                 springPage.getTotalPages(),
                 springPage.isLast()
         );
+    }
+
+    @Override
+    public Order findById(Long orderId) {
+        return orderEntityMapper.toDomain(
+                orderRepository.findById(orderId)
+                        .orElseThrow(() -> new OrderNotFoundException(orderId))
+        );
+    }
+
+    @Override
+    public Order update(Order order) {
+        OrderEntity entity = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new OrderNotFoundException(order.getId()));
+
+        entity.setStatus(order.getStatus());
+        entity.setEmployeeId(order.getEmployeeId());
+
+        return orderEntityMapper.toDomain(orderRepository.save(entity));
     }
 }

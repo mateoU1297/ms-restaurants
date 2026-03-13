@@ -9,6 +9,7 @@ public class Order {
     private Long id;
     private Long clientId;
     private Long restaurantId;
+    private Long employeeId;
     private OrderStatus status;
     private List<OrderDish> dishes;
     private LocalDateTime createdAt;
@@ -17,11 +18,12 @@ public class Order {
     public Order() {
     }
 
-    public Order(Long id, Long clientId, Long restaurantId, OrderStatus status, List<OrderDish> dishes,
+    public Order(Long id, Long clientId, Long restaurantId, Long employeeId, OrderStatus status, List<OrderDish> dishes,
                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.clientId = clientId;
         this.restaurantId = restaurantId;
+        this.employeeId = employeeId;
         this.status = status;
         this.dishes = dishes;
         this.createdAt = createdAt;
@@ -50,6 +52,14 @@ public class Order {
 
     public void setRestaurantId(Long restaurantId) {
         this.restaurantId = restaurantId;
+    }
+
+    public Long getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
     }
 
     public OrderStatus getStatus() {
