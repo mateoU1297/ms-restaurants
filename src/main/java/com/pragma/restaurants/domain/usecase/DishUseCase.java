@@ -38,7 +38,7 @@ public class DishUseCase implements IDishServicePort {
         dishExisting.setPrice(dish.getPrice());
         dishExisting.setDescription(dish.getDescription());
 
-        return dishPersistencePort.update(dishExisting);
+        return dishPersistencePort.save(dishExisting);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class DishUseCase implements IDishServicePort {
         Dish existing = dishPersistencePort.findById(dishId);
         validateOwnership(existing.getRestaurantId());
         existing.setActive(!existing.getActive());
-        return dishPersistencePort.update(existing);
+        return dishPersistencePort.save(existing);
     }
 
     @Override
