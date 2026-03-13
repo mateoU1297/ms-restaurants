@@ -240,6 +240,47 @@ paths:
         '409':
           description: Employee already associated to this restaurant
 
+  /employees/orders:
+    get:
+      summary: List orders filtered by status
+      operationId: listOrdersByStatus
+      tags:
+        - Orders
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ PENDING, IN_PREPARATION, READY, DELIVERED, CANCELLED ]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+      responses:
+        '200':
+          description: Orders listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-order.yaml#/components/schemas/PagedOrderResponse'
+        '403':
+          description: Employee not assigned to any restaurant
+        '404':
+          description: Restaurant not found
+
   /clients/restaurants:
     get:
       summary: List all restaurants paginated and alphabetically ordered
