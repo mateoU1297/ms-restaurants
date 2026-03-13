@@ -35,12 +35,6 @@ public class DishJpaAdapter implements IDishPersistencePort {
     }
 
     @Override
-    public Dish update(Dish dish) {
-        DishEntity entity = dishEntityMapper.toEntity(dish);
-        return dishEntityMapper.toDomain(dishRepository.save(entity));
-    }
-
-    @Override
     public Page<Dish> findByRestaurant(Long restaurantId, Long categoryId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         org.springframework.data.domain.Page<DishEntity> springPage =

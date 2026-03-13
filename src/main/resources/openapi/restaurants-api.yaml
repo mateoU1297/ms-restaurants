@@ -16,6 +16,8 @@ tags:
     description: Restaurant management operations
   - name: Dishes
     description: Dish management operations for restaurants
+  - name: Orders
+    description: Order management operations for restaurants
 
 paths:
   /admin/restaurant:
@@ -319,6 +321,32 @@ paths:
             application/json:
               schema:
                 $ref: '../openapi/schemas/schemas-error.yaml#/components/schemas/ErrorResponse'
+
+  /clients/orders:
+    post:
+      summary: Place a new order
+      operationId: createOrder
+      tags:
+        - Orders
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi/schemas/schemas-order.yaml#/components/schemas/OrderRequest'
+      responses:
+        '200':
+          description: Order placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../openapi/schemas/schemas-order.yaml#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid input or dish not available
+        '409':
+          description: Client already has an active order
 
 components:
   securitySchemes:

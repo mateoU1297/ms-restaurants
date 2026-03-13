@@ -140,7 +140,7 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(1L)).thenReturn(existing);
         when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
-        when(dishPersistencePort.update(existing)).thenReturn(existing);
+        when(dishPersistencePort.save(existing)).thenReturn(existing);
 
         Dish result = dishUseCase.update(1L, updateRequest);
 
@@ -160,7 +160,7 @@ class DishUseCaseTest {
         assertThrows(UserIsNotOwnerException.class,
                 () -> dishUseCase.update(1L, new Dish()));
 
-        verify(dishPersistencePort, never()).update(any());
+        verify(dishPersistencePort, never()).save(any());
     }
 
     @Test
@@ -180,7 +180,7 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(1L)).thenReturn(buildExistingDish());
         when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
-        when(dishPersistencePort.update(any())).thenReturn(buildExistingDish());
+        when(dishPersistencePort.save(any())).thenReturn(buildExistingDish());
 
         dishUseCase.update(1L, new Dish());
 
@@ -193,7 +193,7 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(1L)).thenReturn(existing);
         when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
-        when(dishPersistencePort.update(any())).thenReturn(existing);
+        when(dishPersistencePort.save(any())).thenReturn(existing);
 
         dishUseCase.update(1L, new Dish());
 
@@ -206,12 +206,12 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(1L)).thenReturn(existing);
         when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
-        when(dishPersistencePort.update(existing)).thenReturn(existing);
+        when(dishPersistencePort.save(existing)).thenReturn(existing);
 
         Dish result = dishUseCase.toggleActive(1L);
 
         assertFalse(result.getActive());
-        verify(dishPersistencePort).update(existing);
+        verify(dishPersistencePort).save(existing);
     }
 
     @Test
@@ -221,12 +221,12 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(1L)).thenReturn(existing);
         when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
-        when(dishPersistencePort.update(existing)).thenReturn(existing);
+        when(dishPersistencePort.save(existing)).thenReturn(existing);
 
         Dish result = dishUseCase.toggleActive(1L);
 
         assertTrue(result.getActive());
-        verify(dishPersistencePort).update(existing);
+        verify(dishPersistencePort).save(existing);
     }
 
     @Test
@@ -238,7 +238,7 @@ class DishUseCaseTest {
         assertThrows(UserIsNotOwnerException.class,
                 () -> dishUseCase.toggleActive(1L));
 
-        verify(dishPersistencePort, never()).update(any());
+        verify(dishPersistencePort, never()).save(any());
     }
 
     @Test
@@ -258,7 +258,7 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(1L)).thenReturn(buildExistingDish());
         when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(10L);
-        when(dishPersistencePort.update(any())).thenReturn(buildExistingDish());
+        when(dishPersistencePort.save(any())).thenReturn(buildExistingDish());
 
         dishUseCase.toggleActive(1L);
 

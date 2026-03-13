@@ -9,7 +9,5 @@ public interface IDishPersistencePort {
 
     Dish findById(Long id);
 
-    Dish update(Dish dish);
-
     Page<Dish> findByRestaurant(Long restaurantId, Long categoryId, int page, int size);
 }
