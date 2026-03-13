@@ -61,6 +61,7 @@ components:
           example: 1
         status:
           type: string
+          enum: [ PENDING, IN_PREPARATION, READY, DELIVERED, CANCELLED ]
           example: "PENDING"
         dishes:
           type: array
@@ -69,3 +70,22 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    PagedOrderResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderResponse'
+        pageNumber:
+          type: integer
+        pageSize:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        last:
+          type: boolean

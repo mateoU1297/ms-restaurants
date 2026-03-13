@@ -6,9 +6,11 @@ import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.enums.OrderStatus;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
+import com.pragma.restaurants.domain.spi.IRestaurantEmployeePersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.ISecurityContextPort;
 
@@ -18,15 +20,18 @@ public class OrderUseCase implements IOrderServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IDishPersistencePort dishPersistencePort;
     private final ISecurityContextPort securityContextPort;
+    private final IRestaurantEmployeePersistencePort restaurantEmployeePersistencePort;
 
     public OrderUseCase(IOrderPersistencePort orderPersistencePort,
                         IRestaurantPersistencePort restaurantPersistencePort,
                         IDishPersistencePort dishPersistencePort,
-                        ISecurityContextPort securityContextPort) {
+                        ISecurityContextPort securityContextPort,
+                        IRestaurantEmployeePersistencePort restaurantEmployeePersistencePort) {
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.dishPersistencePort = dishPersistencePort;
         this.securityContextPort = securityContextPort;
+        this.restaurantEmployeePersistencePort = restaurantEmployeePersistencePort;
     }
 
     @Override
@@ -46,6 +51,13 @@ public class OrderUseCase implements IOrderServicePort {
         order.setStatus(OrderStatus.PENDING);
 
         return orderPersistencePort.save(order);
+    }
+
+    @Override
+    public Page<Order> findByRestaurantAndStatus(OrderStatus status, int page, int size) {
+        Long employeeId = securityContextPort.getAuthenticatedUserId();
+        Long restaurantId = restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(employeeId);
+        return orderPersistencePort.findByRestaurantAndStatus(restaurantId, status, page, size);
     }
 
     private void validateDishes(Order order) {

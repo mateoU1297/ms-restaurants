@@ -5,4 +5,6 @@ import com.pragma.restaurants.domain.model.RestaurantEmployee;
 public interface IRestaurantEmployeePersistencePort {
 
     RestaurantEmployee save(RestaurantEmployee restaurantEmployee);
+
+    Long findRestaurantIdByEmployeeId(Long employeeId);
 }

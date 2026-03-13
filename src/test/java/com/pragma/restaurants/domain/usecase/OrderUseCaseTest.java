@@ -6,10 +6,12 @@ import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantExcepti
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.OrderDish;
+import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.model.enums.OrderStatus;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
+import com.pragma.restaurants.domain.spi.IRestaurantEmployeePersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.ISecurityContextPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -41,6 +44,8 @@ class OrderUseCaseTest {
     private IDishPersistencePort dishPersistencePort;
     @Mock
     private ISecurityContextPort securityContextPort;
+    @Mock
+    private IRestaurantEmployeePersistencePort restaurantEmployeePersistencePort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -188,5 +193,72 @@ class OrderUseCaseTest {
 
         verify(dishPersistencePort).findById(1L);
         verify(dishPersistencePort).findById(2L);
+    }
+
+    @Test
+    void findByRestaurantAndStatus_shouldReturnPagedOrdersFromEmployeeRestaurant() {
+        List<Order> orders = List.of(order);
+        Page<Order> expectedPage = new Page<>(orders, 0, 10, 1L, 1, true);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findByRestaurantAndStatus(1L, OrderStatus.PENDING, 0, 10))
+                .thenReturn(expectedPage);
+
+        Page<Order> result = orderUseCase.findByRestaurantAndStatus(OrderStatus.PENDING, 0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(0, result.getPageNumber());
+        assertEquals(1L, result.getTotalElements());
+    }
+
+    @Test
+    void findByRestaurantAndStatus_shouldGetEmployeeIdFromSecurityContext() {
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findByRestaurantAndStatus(any(), any(), anyInt(), anyInt()))
+                .thenReturn(new Page<>(List.of(), 0, 10, 0L, 0, true));
+
+        orderUseCase.findByRestaurantAndStatus(OrderStatus.PENDING, 0, 10);
+
+        verify(securityContextPort).getAuthenticatedUserId();
+    }
+
+    @Test
+    void findByRestaurantAndStatus_shouldFetchRestaurantFromEmployeeAssignment() {
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findByRestaurantAndStatus(any(), any(), anyInt(), anyInt()))
+                .thenReturn(new Page<>(List.of(), 0, 10, 0L, 0, true));
+
+        orderUseCase.findByRestaurantAndStatus(OrderStatus.PENDING, 0, 10);
+
+        verify(restaurantEmployeePersistencePort).findRestaurantIdByEmployeeId(20L);
+    }
+
+    @Test
+    void findByRestaurantAndStatus_shouldPassCorrectRestaurantIdToOrderPort() {
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findByRestaurantAndStatus(1L, OrderStatus.IN_PREPARATION, 1, 5))
+                .thenReturn(new Page<>(List.of(), 1, 5, 0L, 0, true));
+
+        orderUseCase.findByRestaurantAndStatus(OrderStatus.IN_PREPARATION, 1, 5);
+
+        verify(orderPersistencePort).findByRestaurantAndStatus(1L, OrderStatus.IN_PREPARATION, 1, 5);
+    }
+
+    @Test
+    void findByRestaurantAndStatus_shouldNotInteractWithRestaurantOrDishPort() {
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findByRestaurantAndStatus(any(), any(), anyInt(), anyInt()))
+                .thenReturn(new Page<>(List.of(), 0, 10, 0L, 0, true));
+
+        orderUseCase.findByRestaurantAndStatus(OrderStatus.PENDING, 0, 10);
+
+        verifyNoInteractions(restaurantPersistencePort);
+        verifyNoInteractions(dishPersistencePort);
     }
 }
