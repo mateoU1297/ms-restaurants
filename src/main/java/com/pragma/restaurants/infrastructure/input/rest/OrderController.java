@@ -27,4 +27,10 @@ public class OrderController implements OrdersApi {
         return ResponseEntity.ok(orderResponse);
     }
 
+    @Override
+    public ResponseEntity<OrderResponse> assignEmployeeToOrder(Long orderId) {
+        OrderResponse orderResponse = orderHandler.assignEmployeeToOrder(orderId);
+        return ResponseEntity.ok(orderResponse);
+    }
+
 }

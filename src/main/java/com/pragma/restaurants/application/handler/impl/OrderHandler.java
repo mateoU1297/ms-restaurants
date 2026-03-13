@@ -38,4 +38,9 @@ public class OrderHandler implements IOrderHandler {
         return orderPageMapper.toResponse(orderPage);
     }
 
+    @Override
+    public OrderResponse assignEmployeeToOrder(Long orderId) {
+        return orderResponseMapper.toResponse(orderServicePort.assignEmployee(orderId));
+    }
+
 }
