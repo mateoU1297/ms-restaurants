@@ -3,9 +3,11 @@ package com.pragma.restaurants.domain.usecase;
 import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
+import com.pragma.restaurants.domain.exception.InvalidSecurityPinException;
 import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
 import com.pragma.restaurants.domain.exception.OrderNotInPreparationException;
 import com.pragma.restaurants.domain.exception.OrderNotPendingException;
+import com.pragma.restaurants.domain.exception.OrderNotReadyException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.OrderDish;
@@ -42,6 +44,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -527,4 +530,91 @@ class OrderUseCaseTest {
         inOrder.verify(orderPersistencePort).save(any());
         inOrder.verify(orderEventPort).publishOrderReady(any());
     }
+
+    @Test
+    void deliverOrder_whenOrderIsReadyAndPinIsValid_shouldSetDeliveredStatus() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setRestaurantId(1L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(order)).thenReturn(order);
+
+        Order result = orderUseCase.deliverOrder(1L, "123456");
+
+        assertEquals(OrderStatus.DELIVERED, order.getStatus());
+        verify(orderPersistencePort).save(order);
+    }
+
+    @Test
+    void deliverOrder_whenPinIsInvalid_shouldThrowInvalidSecurityPinException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setRestaurantId(1L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(InvalidSecurityPinException.class,
+                () -> orderUseCase.deliverOrder(1L, "999999"));
+
+        verify(orderPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void deliverOrder_whenOrderIsNotReady_shouldThrowOrderNotReadyException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotReadyException.class,
+                () -> orderUseCase.deliverOrder(1L, "123456"));
+
+        verify(orderPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void deliverOrder_whenOrderNotFromRestaurant_shouldThrowOrderNotFromRestaurantException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setRestaurantId(99L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotFromRestaurantException.class,
+                () -> orderUseCase.deliverOrder(1L, "123456"));
+
+        verify(orderPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void deliverOrder_whenPinIsInvalid_shouldNotPersistChanges() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setRestaurantId(1L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(InvalidSecurityPinException.class,
+                () -> orderUseCase.deliverOrder(1L, "000000"));
+
+        verifyNoMoreInteractions(orderPersistencePort);
+    }
+
 }

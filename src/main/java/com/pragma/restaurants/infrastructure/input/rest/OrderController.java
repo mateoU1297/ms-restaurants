@@ -1,5 +1,6 @@
 package com.pragma.restaurants.infrastructure.input.rest;
 
+import com.pragma.restaurants.application.dto.DeliverOrderRequest;
 import com.pragma.restaurants.application.dto.OrderRequest;
 import com.pragma.restaurants.application.dto.OrderResponse;
 import com.pragma.restaurants.application.dto.PagedOrderResponse;
@@ -36,6 +37,12 @@ public class OrderController implements OrdersApi {
     @Override
     public ResponseEntity<OrderResponse> notifyOrderReady(Long orderId) {
         OrderResponse orderResponse = orderHandler.notifyOrderReady(orderId);
+        return ResponseEntity.ok(orderResponse);
+    }
+
+    @Override
+    public ResponseEntity<OrderResponse> deliverOrder(Long orderId, DeliverOrderRequest deliverOrderRequest) {
+        OrderResponse orderResponse = orderHandler.deliverOrder(orderId, deliverOrderRequest);
         return ResponseEntity.ok(orderResponse);
     }
 
