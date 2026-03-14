@@ -15,6 +15,7 @@ import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.enums.OrderStatus;
 import com.pragma.restaurants.domain.model.events.OrderReadyEvent;
+import com.pragma.restaurants.domain.model.events.OrderStatusChangedEvent;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IOrderEventPort;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
@@ -64,7 +65,13 @@ public class OrderUseCase implements IOrderServicePort {
         order.setClientId(clientId);
         order.setStatus(OrderStatus.PENDING);
 
-        return orderPersistencePort.save(order);
+        Order saved = orderPersistencePort.save(order);
+
+        orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
+                saved.getId(), clientId, null, OrderStatus.PENDING.name()
+        ));
+
+        return saved;
     }
 
     @Override
@@ -83,11 +90,17 @@ public class OrderUseCase implements IOrderServicePort {
                     String.format("Order %d is not in PENDING status", orderId)
             );
 
+        String previousStatus = order.getStatus().name();
         order.setEmployeeId(securityContextPort.getAuthenticatedUserId());
         order.setStatus(OrderStatus.IN_PREPARATION);
 
-        return orderPersistencePort.save(order);
-//        return orderPersistencePort.update(order);
+        Order updated = orderPersistencePort.save(order);
+
+        orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
+                orderId, order.getClientId(), previousStatus, OrderStatus.IN_PREPARATION.name()
+        ));
+
+        return updated;
     }
 
     @Override
@@ -101,6 +114,7 @@ public class OrderUseCase implements IOrderServicePort {
 
         String clientPhone = userPersistencePort.getClientPhone(order.getClientId());
         String pin = generatePin();
+        String previousStatus = order.getStatus().name();
 
         order.setStatus(OrderStatus.READY);
         order.setSecurityPin(pin);
@@ -110,6 +124,10 @@ public class OrderUseCase implements IOrderServicePort {
 
         orderEventPort.publishOrderReady(new OrderReadyEvent(
                 orderId, order.getClientId(), clientPhone, pin
+        ));
+
+        orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
+                orderId, order.getClientId(), previousStatus, OrderStatus.READY.name()
         ));
 
         return updatedOrder;
@@ -129,14 +147,21 @@ public class OrderUseCase implements IOrderServicePort {
                     String.format("Invalid security pin for order %d", orderId)
             );
 
+        String previousStatus = order.getStatus().name();
         order.setStatus(OrderStatus.DELIVERED);
-        return orderPersistencePort.save(order);
+
+        Order updated = orderPersistencePort.save(order);
+
+        orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
+                orderId, order.getClientId(), previousStatus, OrderStatus.DELIVERED.name()
+        ));
+
+        return updated;
     }
 
     @Override
     public Order cancelOrder(Long orderId) {
         Long clientId = securityContextPort.getAuthenticatedUserId();
-
         Order order = orderPersistencePort.findById(orderId);
 
         if (!order.getClientId().equals(clientId))
@@ -149,8 +174,16 @@ public class OrderUseCase implements IOrderServicePort {
                     "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse"
             );
 
+        String previousStatus = order.getStatus().name();
         order.setStatus(OrderStatus.CANCELLED);
-        return orderPersistencePort.save(order);
+
+        Order updated = orderPersistencePort.save(order);
+
+        orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
+                orderId, order.getClientId(), previousStatus, OrderStatus.CANCELLED.name()
+        ));
+
+        return updated;
     }
 
     private Order findAndValidateOrderFromRestaurant(Long orderId) {
