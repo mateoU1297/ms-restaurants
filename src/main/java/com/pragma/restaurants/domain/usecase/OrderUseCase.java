@@ -5,6 +5,7 @@ import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
 import com.pragma.restaurants.domain.exception.InvalidSecurityPinException;
+import com.pragma.restaurants.domain.exception.OrderCannotBeCancelledException;
 import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
 import com.pragma.restaurants.domain.exception.OrderNotInPreparationException;
 import com.pragma.restaurants.domain.exception.OrderNotPendingException;
@@ -129,6 +130,26 @@ public class OrderUseCase implements IOrderServicePort {
             );
 
         order.setStatus(OrderStatus.DELIVERED);
+        return orderPersistencePort.save(order);
+    }
+
+    @Override
+    public Order cancelOrder(Long orderId) {
+        Long clientId = securityContextPort.getAuthenticatedUserId();
+
+        Order order = orderPersistencePort.findById(orderId);
+
+        if (!order.getClientId().equals(clientId))
+            throw new OrderNotFromRestaurantException(
+                    String.format("Order %d does not belong to client %d", orderId, clientId)
+            );
+
+        if (!order.getStatus().equals(OrderStatus.PENDING))
+            throw new OrderCannotBeCancelledException(
+                    "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse"
+            );
+
+        order.setStatus(OrderStatus.CANCELLED);
         return orderPersistencePort.save(order);
     }
 

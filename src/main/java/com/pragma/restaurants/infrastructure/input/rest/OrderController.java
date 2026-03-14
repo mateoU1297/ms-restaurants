@@ -46,4 +46,10 @@ public class OrderController implements OrdersApi {
         return ResponseEntity.ok(orderResponse);
     }
 
+    @Override
+    public ResponseEntity<OrderResponse> cancelOrder(Long orderId) {
+        OrderResponse orderResponse = orderHandler.cancelOrder(orderId);
+        return ResponseEntity.ok(orderResponse);
+    }
+
 }

@@ -15,4 +15,6 @@ public interface IOrderServicePort {
     Order notifyOrderReady(Long orderId);
 
     Order deliverOrder(Long orderId, String securityPin);
+
+    Order cancelOrder(Long orderId);
 }
