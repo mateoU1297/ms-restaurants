@@ -40,6 +40,12 @@ spring:
     placeholders:
       schema_name: restaurant_management
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
 logging:
   level:
     com.pragma.restaurants: DEBUG

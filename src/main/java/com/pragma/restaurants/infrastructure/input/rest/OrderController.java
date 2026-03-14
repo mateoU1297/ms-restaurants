@@ -33,4 +33,10 @@ public class OrderController implements OrdersApi {
         return ResponseEntity.ok(orderResponse);
     }
 
+    @Override
+    public ResponseEntity<OrderResponse> notifyOrderReady(Long orderId) {
+        OrderResponse orderResponse = orderHandler.notifyOrderReady(orderId);
+        return ResponseEntity.ok(orderResponse);
+    }
+
 }

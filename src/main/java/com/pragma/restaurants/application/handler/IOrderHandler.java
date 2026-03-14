@@ -11,4 +11,6 @@ public interface IOrderHandler {
     PagedOrderResponse listOrdersByStatus(String status, int page, int size);
 
     OrderResponse assignEmployeeToOrder(Long orderId);
+
+    OrderResponse notifyOrderReady(Long orderId);
 }

@@ -43,4 +43,9 @@ public class OrderHandler implements IOrderHandler {
         return orderResponseMapper.toResponse(orderServicePort.assignEmployee(orderId));
     }
 
+    @Override
+    public OrderResponse notifyOrderReady(Long orderId) {
+        return orderResponseMapper.toResponse(orderServicePort.notifyOrderReady(orderId));
+    }
+
 }

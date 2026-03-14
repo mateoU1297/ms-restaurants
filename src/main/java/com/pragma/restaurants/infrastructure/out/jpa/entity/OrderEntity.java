@@ -46,6 +46,12 @@ public class OrderEntity {
     @Column(nullable = false)
     private OrderStatus status;
 
+    @Column(name = "security_pin", length = 6)
+    private String securityPin;
+
+    @Column(name = "client_phone", length = 20)
+    private String clientPhone;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<OrderDishEntity> dishes = new ArrayList<>();
 
