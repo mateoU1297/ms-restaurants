@@ -1,6 +1,7 @@
 package com.pragma.restaurants.infrastructure.out.event.adapter;
 
 import com.pragma.restaurants.domain.model.events.OrderReadyEvent;
+import com.pragma.restaurants.domain.model.events.OrderStatusChangedEvent;
 import com.pragma.restaurants.domain.spi.IOrderEventPort;
 import com.pragma.restaurants.infrastructure.config.RabbitMQConfig;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,15 @@ public class RabbitMQOrderEventAdapter implements IOrderEventPort {
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.ORDER_EXCHANGE,
                 RabbitMQConfig.ORDER_READY_ROUTING_KEY,
+                event
+        );
+    }
+
+    @Override
+    public void publishStatusChanged(OrderStatusChangedEvent event) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.ORDER_EXCHANGE,
+                RabbitMQConfig.ORDER_STATUS_CHANGED_ROUTING_KEY,
                 event
         );
     }

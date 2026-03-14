@@ -13,6 +13,4 @@ public interface IOrderPersistencePort {
     Page<Order> findByRestaurantAndStatus(Long restaurantId, OrderStatus status, int page, int size);
 
     Order findById(Long orderId);
-
-//    Order update(Order order);
 }

@@ -16,6 +16,7 @@ import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.model.enums.OrderStatus;
 import com.pragma.restaurants.domain.model.events.OrderReadyEvent;
+import com.pragma.restaurants.domain.model.events.OrderStatusChangedEvent;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IOrderEventPort;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
@@ -695,6 +696,177 @@ class OrderUseCaseTest {
 
         verifyNoInteractions(restaurantPersistencePort);
         verifyNoInteractions(restaurantEmployeePersistencePort);
+    }
+
+    @Test
+    void save_shouldPublishStatusChangedEventWithPendingStatus() {
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.hasActiveOrder(5L)).thenReturn(false);
+        when(restaurantPersistencePort.findById(1L)).thenReturn(restaurant);
+        when(dishPersistencePort.findById(1L)).thenReturn(dish);
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.save(order);
+
+        verify(orderEventPort).publishStatusChanged(argThat(event ->
+                event.getNewStatus().equals(OrderStatus.PENDING.name()) &&
+                        event.getPreviousStatus() == null &&
+                        event.getClientId().equals(5L)
+        ));
+    }
+
+    @Test
+    void assignEmployee_shouldPublishStatusChangedFromPendingToInPreparation() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.assignEmployee(1L);
+
+        verify(orderEventPort).publishStatusChanged(argThat(event ->
+                event.getPreviousStatus().equals(OrderStatus.PENDING.name()) &&
+                        event.getNewStatus().equals(OrderStatus.IN_PREPARATION.name()) &&
+                        event.getOrderId().equals(1L)
+        ));
+    }
+
+    @Test
+    void assignEmployee_shouldPublishEventAfterPersisting() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.assignEmployee(1L);
+
+        InOrder inOrder = inOrder(orderPersistencePort, orderEventPort);
+        inOrder.verify(orderPersistencePort).save(any());
+        inOrder.verify(orderEventPort).publishStatusChanged(any());
+    }
+
+    @Test
+    void notifyOrderReady_shouldPublishStatusChangedFromInPreparationToReady() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getClientPhone(5L)).thenReturn("+573001234567");
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.notifyOrderReady(1L);
+
+        verify(orderEventPort).publishStatusChanged(argThat(event ->
+                event.getPreviousStatus().equals(OrderStatus.IN_PREPARATION.name()) &&
+                        event.getNewStatus().equals(OrderStatus.READY.name()) &&
+                        event.getOrderId().equals(1L)
+        ));
+    }
+
+    @Test
+    void notifyOrderReady_shouldPublishBothReadyAndStatusChangedEvents() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getClientPhone(5L)).thenReturn("+573001234567");
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.notifyOrderReady(1L);
+
+        verify(orderEventPort).publishOrderReady(any(OrderReadyEvent.class));
+        verify(orderEventPort).publishStatusChanged(any(OrderStatusChangedEvent.class));
+    }
+
+    @Test
+    void deliverOrder_shouldPublishStatusChangedFromReadyToDelivered() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.deliverOrder(1L, "123456");
+
+        verify(orderEventPort).publishStatusChanged(argThat(event ->
+                event.getPreviousStatus().equals(OrderStatus.READY.name()) &&
+                        event.getNewStatus().equals(OrderStatus.DELIVERED.name()) &&
+                        event.getOrderId().equals(1L)
+        ));
+    }
+
+    @Test
+    void deliverOrder_whenPinIsInvalid_shouldNotPublishEvent() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setRestaurantId(1L);
+        order.setSecurityPin("123456");
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(InvalidSecurityPinException.class,
+                () -> orderUseCase.deliverOrder(1L, "000000"));
+
+        verifyNoInteractions(orderEventPort);
+    }
+
+    @Test
+    void cancelOrder_shouldPublishStatusChangedFromPendingToCancelled() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.cancelOrder(1L);
+
+        verify(orderEventPort).publishStatusChanged(argThat(event ->
+                event.getPreviousStatus().equals(OrderStatus.PENDING.name()) &&
+                        event.getNewStatus().equals(OrderStatus.CANCELLED.name()) &&
+                        event.getOrderId().equals(1L)
+        ));
+    }
+
+    @Test
+    void cancelOrder_whenOrderIsNotPending_shouldNotPublishEvent() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderCannotBeCancelledException.class,
+                () -> orderUseCase.cancelOrder(1L));
+
+        verifyNoInteractions(orderEventPort);
     }
 
 }
