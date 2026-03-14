@@ -1,5 +1,6 @@
 package com.pragma.restaurants.application.handler.impl;
 
+import com.pragma.restaurants.application.dto.DeliverOrderRequest;
 import com.pragma.restaurants.application.dto.OrderRequest;
 import com.pragma.restaurants.application.dto.OrderResponse;
 import com.pragma.restaurants.application.dto.PagedOrderResponse;
@@ -46,6 +47,13 @@ public class OrderHandler implements IOrderHandler {
     @Override
     public OrderResponse notifyOrderReady(Long orderId) {
         return orderResponseMapper.toResponse(orderServicePort.notifyOrderReady(orderId));
+    }
+
+    @Override
+    public OrderResponse deliverOrder(Long orderId, DeliverOrderRequest deliverOrderRequest) {
+        return orderResponseMapper.toResponse(
+                orderServicePort.deliverOrder(orderId, deliverOrderRequest.getSecurityPin())
+        );
     }
 
 }

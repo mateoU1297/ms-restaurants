@@ -4,9 +4,11 @@ import com.pragma.restaurants.domain.api.IOrderServicePort;
 import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
+import com.pragma.restaurants.domain.exception.InvalidSecurityPinException;
 import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
 import com.pragma.restaurants.domain.exception.OrderNotInPreparationException;
 import com.pragma.restaurants.domain.exception.OrderNotPendingException;
+import com.pragma.restaurants.domain.exception.OrderNotReadyException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
 import com.pragma.restaurants.domain.model.Page;
@@ -110,6 +112,24 @@ public class OrderUseCase implements IOrderServicePort {
         ));
 
         return updatedOrder;
+    }
+
+    @Override
+    public Order deliverOrder(Long orderId, String securityPin) {
+        Order order = findAndValidateOrderFromRestaurant(orderId);
+
+        if (!order.getStatus().equals(OrderStatus.READY))
+            throw new OrderNotReadyException(
+                    String.format("Order %d is not in READY status", orderId)
+            );
+
+        if (!order.getSecurityPin().equals(securityPin))
+            throw new InvalidSecurityPinException(
+                    String.format("Invalid security pin for order %d", orderId)
+            );
+
+        order.setStatus(OrderStatus.DELIVERED);
+        return orderPersistencePort.save(order);
     }
 
     private Order findAndValidateOrderFromRestaurant(Long orderId) {

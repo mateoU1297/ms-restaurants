@@ -13,4 +13,6 @@ public interface IOrderServicePort {
     Order assignEmployee(Long orderId);
 
     Order notifyOrderReady(Long orderId);
+
+    Order deliverOrder(Long orderId, String securityPin);
 }
