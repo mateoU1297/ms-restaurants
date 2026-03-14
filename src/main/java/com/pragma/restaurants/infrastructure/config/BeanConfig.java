@@ -5,6 +5,7 @@ import com.pragma.restaurants.domain.api.IOrderServicePort;
 import com.pragma.restaurants.domain.api.IRestaurantEmployeeServicePort;
 import com.pragma.restaurants.domain.api.IRestaurantServicePort;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
+import com.pragma.restaurants.domain.spi.IOrderEventPort;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantEmployeePersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
@@ -19,6 +20,7 @@ import com.pragma.restaurants.infrastructure.mapper.IOrderEntityMapper;
 import com.pragma.restaurants.infrastructure.mapper.IRestaurantEmployeeEntityMapper;
 import com.pragma.restaurants.infrastructure.mapper.IRestaurantEntityMapper;
 import com.pragma.restaurants.infrastructure.mapper.IUserFeignMapper;
+import com.pragma.restaurants.infrastructure.out.event.adapter.RabbitMQOrderEventAdapter;
 import com.pragma.restaurants.infrastructure.out.feign.adapter.UserFeignAdapter;
 import com.pragma.restaurants.infrastructure.out.feign.client.IUserFeignClient;
 import com.pragma.restaurants.infrastructure.out.jpa.adapter.DishJpaAdapter;
@@ -32,6 +34,7 @@ import com.pragma.restaurants.infrastructure.repository.RestaurantEmployeeReposi
 import com.pragma.restaurants.infrastructure.repository.RestaurantRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -51,6 +54,7 @@ public class BeanConfig {
     private final IOrderEntityMapper orderEntityMapper;
 
     private final HttpServletRequest httpServletRequest;
+    private final RabbitTemplate rabbitTemplate;
 
     @Bean
     public IRestaurantPersistencePort restaurantPersistencePort() {
@@ -101,7 +105,12 @@ public class BeanConfig {
     @Bean
     public IOrderServicePort orderServicePort() {
         return new OrderUseCase(orderPersistencePort(), restaurantPersistencePort(), dishPersistencePort(),
-                securityContextPort(), restaurantEmployeePersistencePort());
+                securityContextPort(), restaurantEmployeePersistencePort(), orderEventPort(), userPersistencePort());
+    }
+
+    @Bean
+    public IOrderEventPort orderEventPort() {
+        return new RabbitMQOrderEventAdapter(rabbitTemplate);
     }
 
 }

@@ -4,6 +4,7 @@ import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
 import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
+import com.pragma.restaurants.domain.exception.OrderNotInPreparationException;
 import com.pragma.restaurants.domain.exception.OrderNotPendingException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Order;
@@ -11,14 +12,18 @@ import com.pragma.restaurants.domain.model.OrderDish;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
 import com.pragma.restaurants.domain.model.enums.OrderStatus;
+import com.pragma.restaurants.domain.model.events.OrderReadyEvent;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
+import com.pragma.restaurants.domain.spi.IOrderEventPort;
 import com.pragma.restaurants.domain.spi.IOrderPersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantEmployeePersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.ISecurityContextPort;
+import com.pragma.restaurants.domain.spi.IUserPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,9 +33,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -48,6 +57,10 @@ class OrderUseCaseTest {
     private ISecurityContextPort securityContextPort;
     @Mock
     private IRestaurantEmployeePersistencePort restaurantEmployeePersistencePort;
+    @Mock
+    private IOrderEventPort orderEventPort;
+    @Mock
+    private IUserPersistencePort userPersistencePort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -273,14 +286,14 @@ class OrderUseCaseTest {
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
         when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
         when(orderPersistencePort.findById(1L)).thenReturn(order);
-        when(orderPersistencePort.update(order)).thenReturn(order);
+        when(orderPersistencePort.save(order)).thenReturn(order);
 
         Order result = orderUseCase.assignEmployee(1L);
 
         assertNotNull(result);
         assertEquals(20L, order.getEmployeeId());
         assertEquals(OrderStatus.IN_PREPARATION, order.getStatus());
-        verify(orderPersistencePort).update(order);
+        verify(orderPersistencePort).save(order);
     }
 
     @Test
@@ -296,7 +309,7 @@ class OrderUseCaseTest {
         assertThrows(OrderNotFromRestaurantException.class,
                 () -> orderUseCase.assignEmployee(1L));
 
-        verify(orderPersistencePort, never()).update(any());
+        verify(orderPersistencePort, never()).save(any());
     }
 
     @Test
@@ -312,7 +325,7 @@ class OrderUseCaseTest {
         assertThrows(OrderNotPendingException.class,
                 () -> orderUseCase.assignEmployee(1L));
 
-        verify(orderPersistencePort, never()).update(any());
+        verify(orderPersistencePort, never()).save(any());
     }
 
     @Test
@@ -328,7 +341,7 @@ class OrderUseCaseTest {
         assertThrows(OrderNotPendingException.class,
                 () -> orderUseCase.assignEmployee(1L));
 
-        verify(orderPersistencePort, never()).update(any());
+        verify(orderPersistencePort, never()).save(any());
     }
 
     @Test
@@ -340,11 +353,11 @@ class OrderUseCaseTest {
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
         when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
         when(orderPersistencePort.findById(1L)).thenReturn(order);
-        when(orderPersistencePort.update(any())).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
 
         orderUseCase.assignEmployee(1L);
 
-        verify(securityContextPort).getAuthenticatedUserId();
+        verify(securityContextPort, times(2)).getAuthenticatedUserId();
     }
 
     @Test
@@ -356,7 +369,7 @@ class OrderUseCaseTest {
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
         when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
         when(orderPersistencePort.findById(1L)).thenReturn(order);
-        when(orderPersistencePort.update(any())).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
 
         orderUseCase.assignEmployee(1L);
 
@@ -372,10 +385,146 @@ class OrderUseCaseTest {
         when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
         when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
         when(orderPersistencePort.findById(1L)).thenReturn(order);
-        when(orderPersistencePort.update(any())).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
 
         orderUseCase.assignEmployee(1L);
 
         verify(restaurantEmployeePersistencePort).findRestaurantIdByEmployeeId(20L);
+    }
+
+    @Test
+    void notifyOrderReady_whenOrderIsInPreparation_shouldSetReadyAndPublishEvent() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getClientPhone(5L)).thenReturn("+573001234567");
+        when(orderPersistencePort.save(order)).thenReturn(order);
+
+        Order result = orderUseCase.notifyOrderReady(1L);
+
+        assertEquals(OrderStatus.READY, order.getStatus());
+        assertNotNull(order.getSecurityPin());
+        assertEquals("+573001234567", order.getClientPhone());
+        verify(orderPersistencePort).save(order);
+        verify(orderEventPort).publishOrderReady(any(OrderReadyEvent.class));
+    }
+
+    @Test
+    void notifyOrderReady_shouldGenerateSixDigitPin() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getClientPhone(5L)).thenReturn("+573001234567");
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.notifyOrderReady(1L);
+
+        assertNotNull(order.getSecurityPin());
+        assertEquals(6, order.getSecurityPin().length());
+        assertTrue(order.getSecurityPin().matches("\\d{6}"));
+    }
+
+    @Test
+    void notifyOrderReady_shouldPublishEventWithCorrectData() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getClientPhone(5L)).thenReturn("+573001234567");
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.notifyOrderReady(1L);
+
+        verify(orderEventPort).publishOrderReady(argThat(event ->
+                event.getOrderId().equals(1L) &&
+                        event.getClientId().equals(5L) &&
+                        event.getClientPhone().equals("+573001234567") &&
+                        event.getSecurityPin() != null
+        ));
+    }
+
+    @Test
+    void notifyOrderReady_whenOrderIsNotInPreparation_shouldThrowOrderNotInPreparationException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setRestaurantId(1L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotInPreparationException.class,
+                () -> orderUseCase.notifyOrderReady(1L));
+
+        verify(orderPersistencePort, never()).save(any());
+        verifyNoInteractions(orderEventPort);
+    }
+
+    @Test
+    void notifyOrderReady_whenOrderNotFromRestaurant_shouldThrowOrderNotFromRestaurantException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(99L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotFromRestaurantException.class,
+                () -> orderUseCase.notifyOrderReady(1L));
+
+        verify(orderPersistencePort, never()).save(any());
+        verifyNoInteractions(orderEventPort);
+        verifyNoInteractions(userPersistencePort);
+    }
+
+    @Test
+    void notifyOrderReady_whenOrderNotFromRestaurant_shouldNotFetchClientPhone() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(99L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotFromRestaurantException.class,
+                () -> orderUseCase.notifyOrderReady(1L));
+
+        verifyNoInteractions(userPersistencePort);
+    }
+
+    @Test
+    void notifyOrderReady_shouldUpdateOrderBeforePublishingEvent() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setRestaurantId(1L);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(20L);
+        when(restaurantEmployeePersistencePort.findRestaurantIdByEmployeeId(20L)).thenReturn(1L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getClientPhone(5L)).thenReturn("+573001234567");
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.notifyOrderReady(1L);
+
+        InOrder inOrder = inOrder(orderPersistencePort, orderEventPort);
+        inOrder.verify(orderPersistencePort).save(any());
+        inOrder.verify(orderEventPort).publishOrderReady(any());
     }
 }

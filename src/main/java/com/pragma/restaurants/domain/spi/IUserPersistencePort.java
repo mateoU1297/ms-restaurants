@@ -5,4 +5,6 @@ import com.pragma.restaurants.domain.model.User;
 public interface IUserPersistencePort {
 
     User getUserById(Long userId);
+
+    String getClientPhone(Long clientId);
 }

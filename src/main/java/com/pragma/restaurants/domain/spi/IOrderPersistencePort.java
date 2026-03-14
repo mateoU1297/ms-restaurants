@@ -14,5 +14,5 @@ public interface IOrderPersistencePort {
 
     Order findById(Long orderId);
 
-    Order update(Order order);
+//    Order update(Order order);
 }

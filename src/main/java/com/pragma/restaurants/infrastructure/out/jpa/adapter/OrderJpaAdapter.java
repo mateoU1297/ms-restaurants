@@ -63,14 +63,14 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
         );
     }
 
-    @Override
-    public Order update(Order order) {
-        OrderEntity entity = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new OrderNotFoundException(order.getId()));
-
-        entity.setStatus(order.getStatus());
-        entity.setEmployeeId(order.getEmployeeId());
-
-        return orderEntityMapper.toDomain(orderRepository.save(entity));
-    }
+//    @Override
+//    public Order update(Order order) {
+//        OrderEntity entity = orderRepository.findById(order.getId())
+//                .orElseThrow(() -> new OrderNotFoundException(order.getId()));
+//
+//        entity.setStatus(order.getStatus());
+//        entity.setEmployeeId(order.getEmployeeId());
+//
+//        return orderEntityMapper.toDomain(orderRepository.save(entity));
+//    }
 }

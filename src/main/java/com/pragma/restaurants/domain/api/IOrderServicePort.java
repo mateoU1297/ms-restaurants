@@ -11,4 +11,6 @@ public interface IOrderServicePort {
     Page<Order> findByRestaurantAndStatus(OrderStatus status, int page, int size);
 
     Order assignEmployee(Long orderId);
+
+    Order notifyOrderReady(Long orderId);
 }

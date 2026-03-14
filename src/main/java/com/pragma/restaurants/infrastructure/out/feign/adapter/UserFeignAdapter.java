@@ -18,4 +18,9 @@ public class UserFeignAdapter implements IUserPersistencePort {
     public User getUserById(Long userId) {
         return userFeignMapper.toDomain(userFeignClient.getUserById(userId));
     }
+
+    @Override
+    public String getClientPhone(Long clientId) {
+        return userFeignMapper.toDomain(userFeignClient.getUserById(clientId)).getPhoneNumber();
+    }
 }
