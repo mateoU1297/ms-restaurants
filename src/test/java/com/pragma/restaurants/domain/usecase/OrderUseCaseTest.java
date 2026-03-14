@@ -4,6 +4,7 @@ import com.pragma.restaurants.domain.exception.ClientHasActiveOrderException;
 import com.pragma.restaurants.domain.exception.DishNotAvailableException;
 import com.pragma.restaurants.domain.exception.DishNotBelongsToRestaurantException;
 import com.pragma.restaurants.domain.exception.InvalidSecurityPinException;
+import com.pragma.restaurants.domain.exception.OrderCannotBeCancelledException;
 import com.pragma.restaurants.domain.exception.OrderNotFromRestaurantException;
 import com.pragma.restaurants.domain.exception.OrderNotInPreparationException;
 import com.pragma.restaurants.domain.exception.OrderNotPendingException;
@@ -615,6 +616,85 @@ class OrderUseCaseTest {
                 () -> orderUseCase.deliverOrder(1L, "000000"));
 
         verifyNoMoreInteractions(orderPersistencePort);
+    }
+
+    @Test
+    void cancelOrder_whenOrderIsPendingAndBelongsToClient_shouldSetCancelledStatus() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(order)).thenReturn(order);
+
+        Order result = orderUseCase.cancelOrder(1L);
+
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        verify(orderPersistencePort).save(order);
+    }
+
+    @Test
+    void cancelOrder_whenOrderIsNotPending_shouldThrowOrderCannotBeCancelledException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        OrderCannotBeCancelledException ex = assertThrows(OrderCannotBeCancelledException.class,
+                () -> orderUseCase.cancelOrder(1L));
+
+        assertEquals("Lo sentimos, tu pedido ya está en preparación y no puede cancelarse",
+                ex.getMessage());
+        verify(orderPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void cancelOrder_whenOrderIsReady_shouldThrowOrderCannotBeCancelledException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.READY);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderCannotBeCancelledException.class,
+                () -> orderUseCase.cancelOrder(1L));
+
+        verify(orderPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void cancelOrder_whenOrderDoesNotBelongToClient_shouldThrowException() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setClientId(99L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+
+        assertThrows(OrderNotFromRestaurantException.class,
+                () -> orderUseCase.cancelOrder(1L));
+
+        verify(orderPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void cancelOrder_shouldNotInteractWithRestaurantOrEmployeePorts() {
+        order.setId(1L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setClientId(5L);
+
+        when(securityContextPort.getAuthenticatedUserId()).thenReturn(5L);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.save(any())).thenReturn(order);
+
+        orderUseCase.cancelOrder(1L);
+
+        verifyNoInteractions(restaurantPersistencePort);
+        verifyNoInteractions(restaurantEmployeePersistencePort);
     }
 
 }
