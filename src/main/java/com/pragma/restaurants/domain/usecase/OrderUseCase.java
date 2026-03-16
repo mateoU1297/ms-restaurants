@@ -68,7 +68,8 @@ public class OrderUseCase implements IOrderServicePort {
         Order saved = orderPersistencePort.save(order);
 
         orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
-                saved.getId(), clientId, null, OrderStatus.PENDING.name()
+                saved.getId(), clientId, order.getRestaurantId(), null, null,
+                OrderStatus.PENDING.name()
         ));
 
         return saved;
@@ -97,7 +98,8 @@ public class OrderUseCase implements IOrderServicePort {
         Order updated = orderPersistencePort.save(order);
 
         orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
-                orderId, order.getClientId(), previousStatus, OrderStatus.IN_PREPARATION.name()
+                orderId, order.getClientId(), order.getRestaurantId(), order.getEmployeeId(), previousStatus,
+                OrderStatus.IN_PREPARATION.name()
         ));
 
         return updated;
@@ -127,7 +129,8 @@ public class OrderUseCase implements IOrderServicePort {
         ));
 
         orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
-                orderId, order.getClientId(), previousStatus, OrderStatus.READY.name()
+                orderId, order.getClientId(), order.getRestaurantId(), order.getEmployeeId(), previousStatus,
+                OrderStatus.READY.name()
         ));
 
         return updatedOrder;
@@ -153,7 +156,8 @@ public class OrderUseCase implements IOrderServicePort {
         Order updated = orderPersistencePort.save(order);
 
         orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
-                orderId, order.getClientId(), previousStatus, OrderStatus.DELIVERED.name()
+                orderId, order.getClientId(), order.getRestaurantId(), order.getEmployeeId(), previousStatus,
+                OrderStatus.DELIVERED.name()
         ));
 
         return updated;
@@ -180,7 +184,8 @@ public class OrderUseCase implements IOrderServicePort {
         Order updated = orderPersistencePort.save(order);
 
         orderEventPort.publishStatusChanged(new OrderStatusChangedEvent(
-                orderId, order.getClientId(), previousStatus, OrderStatus.CANCELLED.name()
+                orderId, order.getClientId(), order.getRestaurantId(), order.getEmployeeId(), previousStatus,
+                OrderStatus.CANCELLED.name()
         ));
 
         return updated;

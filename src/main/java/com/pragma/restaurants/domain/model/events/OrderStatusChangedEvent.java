@@ -6,13 +6,18 @@ import java.time.LocalDateTime;
 public class OrderStatusChangedEvent implements Serializable {
     private Long orderId;
     private Long clientId;
+    private Long restaurantId;
+    private Long employeeId;
     private String previousStatus;
     private String newStatus;
     private LocalDateTime changedAt;
 
-    public OrderStatusChangedEvent(Long orderId, Long clientId, String previousStatus, String newStatus) {
+    public OrderStatusChangedEvent(Long orderId, Long clientId, Long restaurantId, Long employeeId,
+                                   String previousStatus, String newStatus) {
         this.orderId = orderId;
         this.clientId = clientId;
+        this.restaurantId = restaurantId;
+        this.employeeId = employeeId;
         this.previousStatus = previousStatus;
         this.newStatus = newStatus;
         this.changedAt = LocalDateTime.now();
@@ -32,6 +37,22 @@ public class OrderStatusChangedEvent implements Serializable {
 
     public void setClientId(Long clientId) {
         this.clientId = clientId;
+    }
+
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
+
+    public Long getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
     }
 
     public String getPreviousStatus() {
