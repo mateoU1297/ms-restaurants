@@ -5,6 +5,7 @@ import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import com.pragma.restaurants.domain.model.Dish;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
+import com.pragma.restaurants.domain.model.validator.DishValidator;
 import com.pragma.restaurants.domain.spi.IDishPersistencePort;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.ISecurityContextPort;
@@ -25,6 +26,7 @@ public class DishUseCase implements IDishServicePort {
 
     @Override
     public Dish save(Dish dish) {
+        DishValidator.validate(dish);
         validateOwnership(dish.getRestaurantId());
         dish.setActive(true);
         return dishPersistencePort.save(dish);
@@ -32,6 +34,7 @@ public class DishUseCase implements IDishServicePort {
 
     @Override
     public Dish update(Long dishId, Dish dish) {
+        DishValidator.validate(dish);
         Dish dishExisting = dishPersistencePort.findById(dishId);
         validateOwnership(dishExisting.getRestaurantId());
 

@@ -4,6 +4,7 @@ import com.pragma.restaurants.domain.api.IRestaurantServicePort;
 import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import com.pragma.restaurants.domain.model.Page;
 import com.pragma.restaurants.domain.model.Restaurant;
+import com.pragma.restaurants.domain.model.validator.RestaurantValidator;
 import com.pragma.restaurants.domain.spi.IRestaurantPersistencePort;
 import com.pragma.restaurants.domain.spi.IUserPersistencePort;
 
@@ -22,6 +23,8 @@ public class RestaurantUseCase implements IRestaurantServicePort {
 
     @Override
     public Restaurant save(Restaurant restaurant) {
+        RestaurantValidator.validate(restaurant);
+
         boolean isOwner = userPersistencePort.getUserById(restaurant.getOwnerId())
                 .getRoles()
                 .contains(OWNER);

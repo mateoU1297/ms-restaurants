@@ -2,6 +2,7 @@ package com.pragma.restaurants.infrastructure.exception;
 
 import com.pragma.restaurants.application.dto.response.ErrorResponse;
 import com.pragma.restaurants.domain.exception.DomainException;
+import com.pragma.restaurants.domain.exception.InvalidFieldException;
 import com.pragma.restaurants.domain.exception.UserIsNotAdminException;
 import com.pragma.restaurants.domain.exception.UserIsNotOwnerException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -243,5 +244,20 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(InvalidFieldException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidField(
+            InvalidFieldException ex, HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.badRequest().body(error);
     }
 }

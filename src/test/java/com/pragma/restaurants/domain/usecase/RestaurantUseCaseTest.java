@@ -47,6 +47,8 @@ class RestaurantUseCaseTest {
         restaurant.setId(1L);
         restaurant.setOwnerId(10L);
         restaurant.setName("Test Restaurant");
+        restaurant.setNit("12345");
+        restaurant.setPhone("+571234567890");
 
         ownerUser = new User();
         ownerUser.setId(10L);
